@@ -1,39 +1,39 @@
-// const axios = require('axios');
-// const cheerio = require('cheerio');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
-// async function fetchInstagramAPKVersions() {
-//   try {
-//     const response = await axios.get('https://www.apkmirror.com/uploads/?appcategory=instagram-instagram');
-//     const $ = cheerio.load(response.data);
+async function fetchInstagramAPKVersions() {
+    try {
+        const response = await axios.get('https://www.apkmirror.com/uploads/?appcategory=instagram-instagram');
+        const $ = cheerio.load(response.data);
 
-//     // Extract information from the HTML structure
-//     const versions = [];
-//     $('item').each((index, element) => {
-//       const title = $(element).find('title').text().trim();
-//       const isBetaOrAlpha = /beta|alpha/i.test(title);
+        // Extract information from the HTML structure
+        const versions = [];
+        $('item').each((index, element) => {
+            const title = $(element).find('title').text().trim();
+            const isBetaOrAlpha = /beta|alpha/i.test(title);
 
-//       if (!isBetaOrAlpha) {
-//         const version = {
-//           name: title,
-//           link: $(element).find('link').text().trim(),
-//           pubDate: $(element).find('pubDate').text().trim(),
-//           // Add other fields as needed
-//         };
-//         versions.push(version);
-//       }
-//     });
+            if (!isBetaOrAlpha) {
+                const version = {
+                    name: title,
+                    link: $(element).find('link').text().trim(),
+                    pubDate: $(element).find('pubDate').text().trim(),
+                    // Add other fields as needed
+                };
+                versions.push(version);
+            }
+        });
 
-//     // Log the extracted data
-//     console.log('Extracted Versions:', versions);
+        // Log the extracted data
+        console.log('Extracted Versions:', versions);
 
-//     // Save data to MongoDB (you need to implement this part)
-//     // saveToMongoDB(versions);
-//   } catch (error) {
-//     console.error('Error fetching data:', error);
-//   }
-// }
+        // Save data to MongoDB (you need to implement this part)
+        // saveToMongoDB(versions);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
 
-// module.exports = fetchInstagramAPKVersions;
+module.exports = fetchInstagramAPKVersions;
 
 import xml2js from 'xml2js';
 
