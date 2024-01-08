@@ -5,7 +5,7 @@ export const Query = {
         try {
             const response = await fetch('https://www.apkmirror.com/apk/instagram/instagram-instagram/feed/');
             const xml = await response.text();
-
+            console.log('Response', response);
             // Parse XML to JSON
             const json = await new Promise((resolve, reject) => {
                 xml2js.parseString(xml, { explicitArray: false }, (err, result) => {

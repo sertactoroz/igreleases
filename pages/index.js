@@ -21,13 +21,13 @@ export default function Home() {
       setQuery([]);
     }
   };
-
+  fetchData();
   return (
     <Layout home>
       <Head>
         <title>{siteTitle}</title>
       </Head>
-      <button onClick={fetchData}>Get Data</button>
+      {/* <button onClick={fetchData}>Get Data</button> */}
       <div>
         <h2>Extracted Data:</h2>
         {query.map((item, index) => (
