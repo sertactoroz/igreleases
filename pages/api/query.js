@@ -1,5 +1,5 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
+import axios from 'axios';
+import cheerio from 'cheerio';
 
 async function fetchInstagramAPKVersions() {
     try {
@@ -33,7 +33,7 @@ async function fetchInstagramAPKVersions() {
     }
 }
 
-module.exports = fetchInstagramAPKVersions;
+
 
 import xml2js from 'xml2js';
 
