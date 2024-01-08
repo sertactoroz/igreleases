@@ -1,16 +1,43 @@
 import axios from 'axios';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
+import xml2js from 'xml2js';
 
 async function fetchInstagramAPKVersions() {
     try {
-        const response = await axios.get('https://www.apkmirror.com/uploads/?appcategory=instagram-instagram');
+        const response = await axios.get('https://www.apkmirror.com/apk/instagram/instagram-instagram/');
         const $ = cheerio.load(response.data);
+        
 
         // Extract information from the HTML structure
+
+        const S = () => {
+            const versions = [];
+            $('a').each((index, element) => {
+                //const title = $(element).find('title').text().trim();
+                const title = $(element).text()
+                const isBetaOrAlpha = /beta|alpha/i.test(title);
+              
+              
+    
+                if (!isBetaOrAlpha) {
+                    const version = {
+                        name: title,
+                        link: $(element).find('link').text().trim(),
+                        pubDate: $(element).find('pubDate').text().trim(),
+                        // Add other fields as needed
+                    };
+                    versions.push(version);
+                }
+            });
+            
+            return versions;
+        }
         const versions = [];
+        
         $('item').each((index, element) => {
             const title = $(element).find('title').text().trim();
             const isBetaOrAlpha = /beta|alpha/i.test(title);
+          
 
             if (!isBetaOrAlpha) {
                 const version = {
@@ -24,7 +51,7 @@ async function fetchInstagramAPKVersions() {
         });
 
         // Log the extracted data
-        console.log('Extracted Versions:', versions);
+        console.log('Extracted Versions:', S());
 
         // Save data to MongoDB (you need to implement this part)
         // saveToMongoDB(versions);
@@ -33,16 +60,17 @@ async function fetchInstagramAPKVersions() {
     }
 }
 
+fetchInstagramAPKVersions();
 
 
-import xml2js from 'xml2js';
+
 
 export const Query = {
     async getQuery() {
         try {
             const response = await fetch('https://www.apkmirror.com/apk/instagram/instagram-instagram/feed/');
             const xml = await response.text();
-            console.log('Response', response);
+            //console.log('Response', response);
             // Parse XML to JSON
             const json = await new Promise((resolve, reject) => {
                 xml2js.parseString(xml, { explicitArray: false }, (err, result) => {
@@ -67,7 +95,7 @@ export const Query = {
                 return extractedData;
             });
 
-            console.log(extractedItems);
+            //console.log(extractedItems);
             return extractedItems;
         } catch (error) {
             console.error(error);
