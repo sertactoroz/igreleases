@@ -4,40 +4,39 @@ import xml2js from 'xml2js';
 
 async function fetchInstagramAPKVersions() {
     try {
-        const response = await axios.get('https://www.apkmirror.com/apk/instagram/instagram-instagram/');
+        const response = await axios.get('https://www.apkmirror.com/uploads/?appcategory=instagram-instagram');
         const $ = cheerio.load(response.data);
-        
 
         // Extract information from the HTML structure
 
         const S = () => {
             const versions = [];
-            $('a').each((index, element) => {
-                //const title = $(element).find('title').text().trim();
-                const title = $(element).text()
+            $('.fontBlack').each((index, element) => {
+                const title = $(element).text().trim();
+                const isInstagram = /instagram/i.test(title);
                 const isBetaOrAlpha = /beta|alpha/i.test(title);
-              
-              
-    
-                if (!isBetaOrAlpha) {
+
+                if (isInstagram && !isBetaOrAlpha) {
+                    const link = $(element).attr('href').trim();
+                    const pubDate = $(element).closest('.table-row').find('.dateyear_utc').data('utcdate').trim();
+
                     const version = {
                         name: title,
-                        link: $(element).find('link').text().trim(),
-                        pubDate: $(element).find('pubDate').text().trim(),
-                        // Add other fields as needed
+                        link: 'https://www.apkmirror.com/' + link,
+                        pubDate: pubDate,
+
                     };
                     versions.push(version);
                 }
             });
-            
+
             return versions;
         }
         const versions = [];
-        
+
         $('item').each((index, element) => {
             const title = $(element).find('title').text().trim();
             const isBetaOrAlpha = /beta|alpha/i.test(title);
-          
 
             if (!isBetaOrAlpha) {
                 const version = {
@@ -61,9 +60,6 @@ async function fetchInstagramAPKVersions() {
 }
 
 fetchInstagramAPKVersions();
-
-
-
 
 export const Query = {
     async getQuery() {
