@@ -32,9 +32,9 @@ export default function Home() {
         <h2>Extracted Data:</h2>
         {query.map((item, index) => (
           <div key={index}>
-            <h3>{item.title}</h3>
-            <p>Link: {item.link}</p>
-            <p>Publication Date: {item.pubDate}</p>
+            <h3><a href={item.link}>{item.name}</a></h3>
+            <h4>{item.pubDate}</h4>
+            <p>{item.rowData}</p>
             <hr />
           </div>
         ))}
