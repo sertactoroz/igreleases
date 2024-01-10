@@ -21,7 +21,9 @@ export default function Home() {
       setQuery([]);
     }
   };
+
   fetchData();
+  
   return (
     <Layout home>
       <Head>
