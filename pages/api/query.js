@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import saveToMongoDB from './mongoDB';
 
 async function fetchInstagramAPKVersions() {
     try {
@@ -73,11 +74,15 @@ function fetchVariants($, link) {
 
 export default async function handler(req, res) {
     try {
+        // Fetch Instagram APK versions
         const data = await fetchInstagramAPKVersions();
         console.log('Extracted Versions:', data);
         res.status(200).json(data);
+        // Save data to MongoDB
+        await saveToMongoDB(data);
+
     } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching data or saving to MongoDB:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
