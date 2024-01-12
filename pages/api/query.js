@@ -3,86 +3,78 @@ import * as cheerio from 'cheerio';
 
 async function fetchInstagramAPKVersions() {
     try {
-        const response = await axios.get('https://www.apkmirror.com/uploads/?appcategory=instagram-instagram');
-        const $ = cheerio.load(response.data);
+        const maxPages = 10; // Define the maximum number of pages to fetch
+        const versions = [];
 
-        // Extract information from the HTML structure
+        // Fetch the first page separately
+        const firstPageUrl = 'https://www.apkmirror.com/uploads/?appcategory=instagram-instagram';
+        const firstPageResponse = await axios.get(firstPageUrl);
+        const $firstPage = cheerio.load(firstPageResponse.data);
 
-        const S = () => {
-            const versions = [];
-            $('.fontBlack').each((index, element) => {
-                const title = $(element).text().trim();
-                const isInstagram = /instagram/i.test(title);
-                const isBetaOrAlpha = /beta|alpha/i.test(title);
+        versions.push(...extractVersions($firstPage));
 
-                if (isInstagram && !isBetaOrAlpha) {
-                    const link = 'https://www.apkmirror.com/' + $(element).attr('href').trim();
-                    const pubDate = $(element).closest('.table-row').find('.dateyear_utc').data('utcdate').trim();
+        // Fetch the remaining pages
+        for (let page = 2; page <= maxPages; page++) {
+            const url = `https://www.apkmirror.com/uploads/page/${page}/?appcategory=instagram-instagram`;
+            const response = await axios.get(url);
+            const $ = cheerio.load(response.data);
 
-                    const version = {
-                        name: title,
-                        link: link,
-                        pubDate: pubDate,
-                    };
-                    versions.push(version);
-                }
-            });
-
-            return versions;
-        };
-
-        const SS = async () => {
-           const finalArray = [];
-           /*
-            Pseudo Kodu:
-            1. S() fonksiyonu ile versiyonları çek
-            2. Her bir versiyon için linkine git
-            3. Oradaki variantları çek
-            4. Her bir variant için linkine git
-            5. Oradaki download linkini çek
-            6. Her bir versiyon için variantları ekle
-
-            */
-           /*
-            Extracted Versions: [
-                {
-                    name: 'Instagram 321.xxx.xx.xxx',
-                    link: 'https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram-instagram-321-xxx-xx-xxx-release/instagram-3211-xxx-xx-xxx-android-apk-download/',
-                    pubDate: '2021-06-03T21:11:00Z'
-                    variants: [
-                        {
-                            variantId: 'xxx.xxx.xx.xxx',
-                            name: 'arm64-v8a',
-                            minVersion: '21',
-                            dpi: 'nodpi',
-                            link: 'https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram-instagram-3211-xxx-xx-xxx-release/instagram-3211-xxx-xx-xxx-android-apk-download/download/?forcebaseapk',
-                        },
-                        ....
-                    ]
-                 },
-            ]
-            */
-           
-
-        
+            versions.push(...extractVersions($));
         }
 
-
-
-        // Return the extracted data
-        return S();
+        return versions.slice(0, 10); // Return the first 10 elements
     } catch (error) {
         console.error('Error fetching data:', error);
         throw error;
     }
 }
 
+function extractVersions($) {
+    const extractedVersions = [];
+
+    $('.fontBlack').each((index, element) => {
+        const title = $(element).text().trim();
+        const isInstagram = /instagram/i.test(title);
+        const isBetaOrAlpha = /beta|alpha/i.test(title);
+
+        const pubDateElement = $(element).closest('.table-row').find('.dateyear_utc');
+        const pubDate = pubDateElement.length ? pubDateElement.data('utcdate') : null;
+
+        if (isInstagram && !isBetaOrAlpha && pubDate !== null) {
+            const link = 'https://www.apkmirror.com/' + $(element).attr('href');
+
+            const variants = fetchVariants($, link);
+
+            const version = {
+                name: title,
+                link: link,
+                pubDate: pubDate,
+                variants: variants,
+            };
+            extractedVersions.push(version);
+        }
+    });
+
+    return extractedVersions;
+}
+
+function fetchVariants($, link) {
+    const variants = [];
+
+    $('.table-row headerFont').each((index, variantElement) => {
+        const dpi = $(variantElement).find('.dpi').text();
+        variants.push({
+            dpi: dpi,
+        });
+    });
+
+    return variants;
+}
+
 export default async function handler(req, res) {
     try {
         const data = await fetchInstagramAPKVersions();
-        // Log the extracted data
         console.log('Extracted Versions:', data);
-
         res.status(200).json(data);
     } catch (error) {
         console.error('Error fetching data:', error);

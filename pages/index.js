@@ -23,7 +23,7 @@ export default function Home() {
   };
 
   fetchData();
-  
+
   return (
     <Layout home>
       <Head>
@@ -36,7 +36,7 @@ export default function Home() {
           <div key={index}>
             <h3><a href={item.link}>{item.name}</a></h3>
             <h4>{item.pubDate}</h4>
-            <p>{item.rowData}</p>
+            <p>variants: {item.variants}</p>
             <hr />
           </div>
         ))}
