@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import saveToMongoDB from './mongoDB';
+// import saveToMongoDB from './mongoDB';
 
 async function fetchInstagramAPKVersions() {
     try {
@@ -60,6 +60,7 @@ function extractVersions($) {
 }
 
 function fetchVariants($, link) {
+    console.log(link)
     const variants = [];
 
     $('.table-row headerFont').each((index, variantElement) => {
@@ -79,7 +80,7 @@ export default async function handler(req, res) {
         console.log('Extracted Versions:', data);
         res.status(200).json(data);
         // Save data to MongoDB
-        await saveToMongoDB(data);
+        // await saveToMongoDB(data);
 
     } catch (error) {
         console.error('Error fetching data or saving to MongoDB:', error);
