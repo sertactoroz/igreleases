@@ -1,10 +1,9 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-// import saveToMongoDB from './mongoDB';
 
 async function fetchInstagramAPKVersions() {
     try {
-        const maxPages = 10; // Define the maximum number of pages to fetch
+        const maxVersions = 10; // Define the maximum number of versions to fetch
         const versions = [];
 
         // Fetch the first page separately
@@ -14,22 +13,21 @@ async function fetchInstagramAPKVersions() {
 
         versions.push(...extractVersions($firstPage));
 
-        // Fetch the remaining pages
-        for (let page = 2; page <= maxPages; page++) {
+        // Fetch the remaining pages until the versions array reaches the limit
+        for (let page = 2; versions.length < maxVersions; page++) {
             const url = `https://www.apkmirror.com/uploads/page/${page}/?appcategory=instagram-instagram`;
             const response = await axios.get(url);
-            const $ = cheerio.load(response.data);
+            const $otherPages = cheerio.load(response.data);
 
-            versions.push(...extractVersions($));
+            versions.push(...extractVersions($otherPages));
         }
 
-        return versions.slice(0, 10); // Return the first 10 elements
+        return versions.slice(0, maxVersions);
     } catch (error) {
         console.error('Error fetching data:', error);
         throw error;
     }
 }
-
 function extractVersions($) {
     const extractedVersions = [];
 
@@ -40,16 +38,18 @@ function extractVersions($) {
 
         const pubDateElement = $(element).closest('.table-row').find('.dateyear_utc');
         const pubDate = pubDateElement.length ? pubDateElement.data('utcdate') : null;
+        const variantInfoText = $(element).closest('.table-row').find('.appRowVariantTag a').text();
 
-        if (isInstagram && !isBetaOrAlpha && pubDate !== null) {
+        if (isInstagram && !isBetaOrAlpha && pubDate !== null && variantInfoText !== null) {
             const link = 'https://www.apkmirror.com/' + $(element).attr('href');
 
-            const variants = fetchVariants($, link);
+            const variants = fetchVariants(link);
 
             const version = {
                 name: title,
                 link: link,
                 pubDate: pubDate,
+                variantInfo: variantInfoText,
                 variants: variants,
             };
             extractedVersions.push(version);
@@ -57,14 +57,18 @@ function extractVersions($) {
     });
 
     return extractedVersions;
-}
+} async function fetchVariants(link) {
+    console.log(link);
 
-function fetchVariants($, link) {
-    console.log(link)
+    // Introduce a delay of, for example, 3 seconds
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    const variantResponse = await axios.get(link);
+    const $variant = cheerio.load(variantResponse.data);
     const variants = [];
 
-    $('.table-row headerFont').each((index, variantElement) => {
-        const dpi = $(variantElement).find('.dpi').text();
+    $variant('.table-row.headerFont').each((index, variantElement) => {
+        const dpi = $variant(variantElement).find('.dpi').text();
         variants.push({
             dpi: dpi,
         });

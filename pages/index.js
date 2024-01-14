@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Layout, { siteTitle } from '../components/layout';
 
@@ -9,7 +9,7 @@ export default function Home() {
     try {
       const res = await fetch('http://localhost:3000/api/query');
       const data = await res.json();
-
+      console.log(data);
       if (Array.isArray(data)) {
         setQuery(data);
       } else {
@@ -22,21 +22,36 @@ export default function Home() {
     }
   };
 
-  fetchData();
+  useEffect(() => {
+    fetchData();
+  }, []); // Use useEffect to fetch data on component mount
 
   return (
     <Layout home>
       <Head>
         <title>{siteTitle}</title>
       </Head>
-      {/* <button onClick={fetchData}>Get Data</button> */}
       <div>
         <h2>Extracted Data:</h2>
         {query.map((item, index) => (
           <div key={index}>
+
+            <h2>{index + 1}</h2>
             <h3><a href={item.link}>{item.name}</a></h3>
             <h4>{item.pubDate}</h4>
-            <p>variants: {item.variants}</p>
+            <h4>{item.variantInfo} available</h4>
+            {Array.isArray(item.variants) ? (
+              <div>
+                <p>Variants:</p>
+                <ul>
+                  {item.variants.map((variant, variantIndex) => (
+                    <li key={variantIndex}>{`DPI: ${variant.dpi}`}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p>No variants available</p>
+            )}
             <hr />
           </div>
         ))}
