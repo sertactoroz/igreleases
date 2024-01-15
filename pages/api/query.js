@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 
 async function fetchInstagramAPKVersions() {
     try {
-        const maxVersions = 10; // Define the maximum number of versions to fetch
+        const maxVersions = 1; // Define the maximum number of versions to fetch
         const versions = [];
 
         // Fetch the first page separately
@@ -16,9 +16,11 @@ async function fetchInstagramAPKVersions() {
         // Fetch the remaining pages until the versions array reaches the limit
         for (let page = 2; versions.length < maxVersions; page++) {
             const url = `https://www.apkmirror.com/uploads/page/${page}/?appcategory=instagram-instagram`;
-            const response = await axios.get(url);
-            const $otherPages = cheerio.load(response.data);
 
+            // Wrap the API request in a rate-limiting function
+            const response = await fetchDataWithRateLimit(url);
+
+            const $otherPages = cheerio.load(response.data);
             versions.push(...extractVersions($otherPages));
         }
 
@@ -28,6 +30,28 @@ async function fetchInstagramAPKVersions() {
         throw error;
     }
 }
+
+async function fetchDataWithRateLimit(url) {
+    try {
+        const response = await axios.get(url);
+
+        // Check for rate-limiting response
+        if (response.status === 429) {
+            console.log('Rate limit exceeded. Waiting and retrying...');
+            // Wait for some time (e.g., 1 minute)
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            // Retry the request
+            return fetchDataWithRateLimit(url);
+        }
+
+        // Return the successful response
+        return response;
+    } catch (error) {
+        console.error('Error fetching data with rate limiting:', error);
+        throw error;
+    }
+}
+
 function extractVersions($) {
     const extractedVersions = [];
 
@@ -57,23 +81,37 @@ function extractVersions($) {
     });
 
     return extractedVersions;
-} async function fetchVariants(link) {
-    console.log(link);
+}
 
-    // Introduce a delay of, for example, 3 seconds
-    await new Promise(resolve => setTimeout(resolve, 3000));
+async function fetchVariants(link) {
+    console.log(link);
 
     const variantResponse = await axios.get(link);
     const $variant = cheerio.load(variantResponse.data);
     const variants = [];
 
-    $variant('.table-row.headerFont').each((index, variantElement) => {
-        const dpi = $variant(variantElement).find('.dpi').text();
-        variants.push({
-            dpi: dpi,
-        });
+    // Select all elements with class 'table-row headerFont'
+    $variant('.table-row.headerFont').each(function () {
+        const variant = {};
+
+        // Find the element containing the APK version
+        const apkElement = $variant(this).find('a.accent_color');
+        variant.Variant = apkElement.text().trim();
+
+        // Find the 2nd, 3rd, and 4th child elements containing architecture, version, and DPI
+        const infoElements = $variant(this).children().slice(1, 4);
+        variant.Architecture = infoElements.eq(0).text().trim();
+        variant.Version = infoElements.eq(1).text().trim();
+        variant.DPI = infoElements.eq(2).text().trim();
+
+        // Add the variant object to the 'variants' array
+        variants.push(variant);
     });
 
+    console.log('variants', variants);
+
+    // You can modify this part based on your needs
+    // Assuming you want to return the variants array
     return variants;
 }
 

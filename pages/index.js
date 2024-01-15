@@ -35,7 +35,6 @@ export default function Home() {
         <h2>Extracted Data:</h2>
         {query.map((item, index) => (
           <div key={index}>
-
             <h2>{index + 1}</h2>
             <h3><a href={item.link}>{item.name}</a></h3>
             <h4>{item.pubDate}</h4>
@@ -45,7 +44,12 @@ export default function Home() {
                 <p>Variants:</p>
                 <ul>
                   {item.variants.map((variant, variantIndex) => (
-                    <li key={variantIndex}>{`DPI: ${variant.dpi}`}</li>
+                    <li key={variantIndex}>
+                      <p>Variant: {variant.Variant}</p>
+                      <p>Architecture: {variant.Architecture}</p>
+                      <p>Version: {variant.Version}</p>
+                      <p>DPI: {variant.DPI}</p>
+                    </li>
                   ))}
                 </ul>
               </div>
